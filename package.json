@@ -1,0 +1,6 @@
+{
+  "type": "module",
+  "dependencies": {
+    "osc-js": "^2.4.1"
+  }
+}
