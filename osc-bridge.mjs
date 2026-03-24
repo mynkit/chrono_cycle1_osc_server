@@ -1,16 +1,38 @@
 import OSC from "osc-js";
 
-// fetchはグローバルで使える
+// ==============================
+// OSC（SuperCollider）
+// ==============================
+const oscSC = new OSC({
+  plugin: new OSC.DatagramPlugin({
+    send: { host: "127.0.0.1", port: 57120 }
+  })
+});
 
-const osc = new OSC({ open: { port: 9000 } });
-osc.open();
+// ==============================
+// OSC（TidalCycles）
+// ==============================
+const oscTidal = new OSC({
+  plugin: new OSC.DatagramPlugin({
+    send: { host: "127.0.0.1", port: 6060 }
+  })
+});
 
+oscSC.open();
+oscTidal.open();
+
+// ==============================
+// パラメータ
+// ==============================
 const NUM_PARAMS = 4;
-const INTERVAL_MS = 50;
-const ALPHA = 0.3;
+const INTERVAL_MS = 1000;
+const ALPHA = 0.15;       // ← 小さくするとsmoothingが強くなる
 
 let values = Array(NUM_PARAMS).fill(0);
 
+// ==============================
+// poll
+// ==============================
 async function poll() {
   try {
     const results = await Promise.all(
@@ -30,8 +52,14 @@ async function poll() {
 
       const { i, v } = result;
 
+      // smoothing
       values[i] = ALPHA * v + (1 - ALPHA) * values[i];
-      osc.send(new OSC.Message(`/osc${i}`, values[i]));
+
+      // 両方に送信
+      const msg = new OSC.Message(`/osc${i}`, values[i]);
+
+      oscSC.send(msg);
+      oscTidal.send(msg);
     });
 
   } catch (e) {
@@ -39,5 +67,6 @@ async function poll() {
   }
 }
 
-console.log("OSC bridge started");
+// ==============================
+console.log(`OSC bridge started (${INTERVAL_MS}ms interval)`);
 setInterval(poll, INTERVAL_MS);
