@@ -26,7 +26,7 @@ oscTidal.open();
 // ==============================
 const NUM_PARAMS = 4;
 const INTERVAL_MS = 1000;
-const ALPHA = 0.15;       // ← 小さくするとsmoothingが強くなる
+const ALPHA = 0.3;       // ← 小さくするとsmoothingが強くなる
 
 let values = Array(NUM_PARAMS).fill(0);
 
@@ -37,11 +37,13 @@ async function poll() {
   try {
     const results = await Promise.all(
       Array.from({ length: NUM_PARAMS }, (_, i) =>
-        fetch(`http://cy1runtimeapi.chronoevent.com/app/osc_fetch?type=osc${i}`)
+        fetch(`http://cy1runtimeapi.chronoevent.com/app/osc_fetch?type=osc${i}&token=keitaasyncstdo`)
           .then(res => res.text())
           .then(text => {
-            const v = parseFloat(text.split(" ")[1]);
-            return { i, v: isNaN(v) ? values[i] : v };
+            const match = text.trim().match(/[-+]?\d*\.?\d+$/);
+            const v = match ? parseFloat(match[0]) : values[i];
+            console.log(`fetch osc${i}: ${v}`);
+            return { i, v };
           })
           .catch(() => null)
       )
@@ -56,10 +58,12 @@ async function poll() {
       values[i] = ALPHA * v + (1 - ALPHA) * values[i];
 
       // 両方に送信
-      const msg = new OSC.Message(`/osc${i}`, values[i]);
+      const tdMsg = new OSC.Message("/ctrl", `osc${i}`, values[i]);
 
-      oscSC.send(msg);
-      oscTidal.send(msg);
+      // console.log(`osc${i}: ${tdMsg.Message}`);
+
+      // oscSC.send(msg);
+      oscTidal.send(tdMsg);
     });
 
   } catch (e) {
