@@ -14,7 +14,7 @@ const oscSC = new OSC({
 // ==============================
 const oscTidal = new OSC({
   plugin: new OSC.DatagramPlugin({
-    send: { host: "127.0.0.1", port: 6060 }
+    send: { host: "127.0.0.1", port: 6061 }
   })
 });
 
