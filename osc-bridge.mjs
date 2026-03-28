@@ -1,11 +1,11 @@
 import OSC from "osc-js";
 
 // ==============================
-// OSC（SuperCollider）
+// OSC（oF）
 // ==============================
-const oscSC = new OSC({
+const oscOF = new OSC({
   plugin: new OSC.DatagramPlugin({
-    send: { host: "127.0.0.1", port: 57120 }
+    send: { host: "127.0.0.1", port: 2020 }
   })
 });
 
@@ -18,7 +18,7 @@ const oscTidal = new OSC({
   })
 });
 
-oscSC.open();
+oscOF.open();
 oscTidal.open();
 
 // ==============================
@@ -64,6 +64,7 @@ async function poll() {
 
       // oscSC.send(msg);
       oscTidal.send(tdMsg);
+      oscOF.send(tdMsg);
     });
 
   } catch (e) {
