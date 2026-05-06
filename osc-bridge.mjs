@@ -14,19 +14,28 @@ const oscOF = new OSC({
 // ==============================
 const oscTidal = new OSC({
   plugin: new OSC.DatagramPlugin({
+    send: { host: "127.0.0.1", port: 6060 }
+  })
+});
+
+// ==============================
+// OSC（TidalCyclesm）
+// ==============================
+const oscTidalm = new OSC({
+  plugin: new OSC.DatagramPlugin({
     send: { host: "127.0.0.1", port: 6061 }
   })
 });
 
 oscOF.open();
 oscTidal.open();
+oscTidalm.open();
 
 // ==============================
 // パラメータ
 // ==============================
 const NUM_PARAMS = 4;
 const INTERVAL_MS = 1000;
-const ALPHA = 0.3;       // ← 小さくするとsmoothingが強くなる
 
 let values = Array(NUM_PARAMS).fill(0);
 
@@ -54,16 +63,13 @@ async function poll() {
 
       const { i, v } = result;
 
-      // smoothing
-      values[i] = ALPHA * v + (1 - ALPHA) * values[i];
+      // smoothingなし（そのまま代入）
+      values[i] = v;
 
-      // 両方に送信
       const tdMsg = new OSC.Message("/ctrl", `osc${i}`, values[i]);
 
-      // console.log(`osc${i}: ${tdMsg.Message}`);
-
-      // oscSC.send(msg);
       oscTidal.send(tdMsg);
+      oscTidalm.send(tdMsg);
       oscOF.send(tdMsg);
     });
 
